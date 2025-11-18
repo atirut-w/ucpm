@@ -3,6 +3,7 @@
 #include <cstdint>
 #include <cstring>
 #include <filesystem>
+#include <format>
 #include <fstream>
 #include <iostream>
 #include <optional>
@@ -22,7 +23,21 @@ zuint8 fetch_opcode(void *context, zuint16 address) {
     running = false;
     return 0x00; // NOP
   } else if (address == 5) {
-    // TODO: CP/M BDOS call handling
+    uint8_t func = cpu.bc.uint8_array[0];
+    uint16_t arg = cpu.de.uint16_value;
+    uint16_t result = 0;
+
+    switch (func) {
+    default:
+      std::cout << std::format("Fatal: unknown BDOS system call {}", func)
+                << std::endl;
+      running = false;
+      break;
+    }
+
+    cpu.af.uint8_array[1] = result & 0xFF;
+    cpu.bc.uint8_array[0] = (result >> 8) & 0xFF;
+    cpu.hl.uint16_value = result;
     return 0xC9; // RET
   }
   return memory[address];
