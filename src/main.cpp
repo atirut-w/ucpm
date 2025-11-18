@@ -1,6 +1,12 @@
+#include <Z80.h>
+#include <cstdint>
 #include <filesystem>
+#include <fstream>
 #include <iostream>
 #include <optional>
+
+Z80 cpu;
+uint8_t memory[65536];
 
 struct Args {
   std::filesystem::path program;
@@ -22,6 +28,15 @@ int main(int argc, char *argv[]) {
     return 1;
   }
 
-  std::cout << "Program path: " << args->program << std::endl;
+  std::ifstream program_file(args->program, std::ios::binary);
+  if (!program_file) {
+    std::cerr << "Error: Could not open program file: " << args->program << std::endl;
+    return 1;
+  }
+
+  for (unsigned addr = 0x0100; addr < sizeof(memory) && !program_file.eof(); addr++) {
+    memory[addr] = program_file.get();
+  }
+
   return 0;
 }

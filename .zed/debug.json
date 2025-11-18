@@ -8,6 +8,7 @@
     "adapter": "CodeLLDB",
     "request": "launch",
     "program": "./build/ucpm",
+    "args": ["zork/ZORK1.COM"],
     "build": {
       "command": "make -C build",
       "args": ["-j"]
