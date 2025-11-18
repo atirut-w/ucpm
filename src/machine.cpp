@@ -105,6 +105,35 @@ static zuint8 fetch_opcode(void *context, zuint16 address) {
     case DRV_GET:
       result = 0; // Always drive A
       break;
+    case F_READRAND: {
+      FileControlBlock fcb;
+      machine.memout(&fcb, arg, sizeof(fcb));
+
+      std::string name = std::format("{:.8}", (char *)fcb.f);
+      std::string type = std::format("{:.3}", (char *)fcb.t);
+      name.erase(name.find_last_not_of(' ') + 1);
+      type.erase(type.find_last_not_of(' ') + 1);
+      std::string path = std::format("{}.{}", name, type);
+
+      if (open_files.find(path) == open_files.end()) {
+        result = 9; // Invalid FCB
+      }
+
+      std::fstream &file = open_files[path];
+
+      int recnum = 0;
+      recnum |= fcb.r[0];
+      recnum |= fcb.r[1] << 8;
+      recnum |= fcb.r[2] << 16;
+
+      file.seekg(recnum * 128, std::ios::beg);
+      char buffer[128];
+      file.read(buffer, 128);
+      machine.memin(machine.dma_address, buffer, 128);
+
+      result = 0; // Success
+      break;
+    }
     default:
       std::cout << std::format(
                        "Fatal: unknown BDOS system call {} with argument {}",

@@ -6,6 +6,7 @@ struct Machine {
   Z80 cpu;
   uint8_t memory[65536];
   bool running = true;
+  uint16_t dma_address = 0x80;
 
   Machine();
 
