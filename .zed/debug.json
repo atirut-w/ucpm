@@ -8,7 +8,8 @@
     "adapter": "CodeLLDB",
     "request": "launch",
     "program": "./build/ucpm",
-    "args": ["zork/ZORK1.COM"],
+    "args": ["ZORK1.COM"],
+    "cwd": "${ZED_WORKTREE_ROOT}/zork",
     "build": {
       "command": "make -C build",
       "args": ["-j"]
