@@ -4,6 +4,7 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 add_subdirectory(3rd)
 
 add_executable(ucpm
-    src/main.c
+    src/main.cpp
 )
 target_link_libraries(ucpm PRIVATE Z80)
+target_compile_features(ucpm PRIVATE cxx_std_23)
