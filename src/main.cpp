@@ -6,6 +6,8 @@
 #include <fstream>
 #include <iostream>
 #include <optional>
+#include <termios.h>
+#include <unistd.h>
 
 struct Args {
   std::filesystem::path program;
@@ -41,9 +43,18 @@ int main(int argc, char *argv[]) {
     machine.memory[addr] = program_file.get();
   }
 
+  // We need to disable canonical mode and echoing for proper console I/O
+  termios old;
+  tcgetattr(STDIN_FILENO, &old);
+  termios newt = old;
+  newt.c_lflag &= ~(ICANON | ECHO);
+  tcsetattr(STDIN_FILENO, TCSANOW, &newt);
+
   while (machine.running) {
     z80_execute(&machine.cpu, 1);
   }
+
+  tcsetattr(STDIN_FILENO, TCSANOW, &old);
 
   return 0;
 }

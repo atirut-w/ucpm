@@ -5,9 +5,20 @@
 #include <iostream>
 #include <machine.hpp>
 #include <string>
+#include <termios.h>
+#include <unistd.h>
 #include <unordered_map>
 
 static std::unordered_map<std::string, std::fstream> open_files;
+
+static bool console_has_char() {
+  fd_set set;
+  struct timeval tv = {0, 0};
+  FD_ZERO(&set);
+  FD_SET(STDIN_FILENO, &set);
+
+  return select(STDIN_FILENO + 1, &set, nullptr, nullptr, &tv) > 0;
+}
 
 static zuint8 read_memory(void *ctx, zuint16 address) {
   return static_cast<Machine *>(ctx)->memory[address];
@@ -32,6 +43,18 @@ static zuint8 fetch_opcode(void *context, zuint16 address) {
     case C_RAWIO:
       switch (arg & 0xff) {
       case 0xff:
+        if (!console_has_char()) {
+          result = 0; // No character available
+        }
+
+        char ch;
+        if (read(STDIN_FILENO, &ch, 1) == 1) {
+          result = ch;
+        } else {
+          result = 0; // No character read
+        }
+
+        break;
       case 0xfe:
       case 0xfd:
       case 0xfc:
@@ -41,7 +64,7 @@ static zuint8 fetch_opcode(void *context, zuint16 address) {
         machine.running = false;
         break;
       default:
-        std::cout << (char)(arg & 0xff);
+        std::cout << (char)(arg & 0xff) << std::flush;
         break;
       }
       break;
