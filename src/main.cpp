@@ -1,5 +1,7 @@
+#include <Z/types/integral.h>
 #include <Z80.h>
 #include <cstdint>
+#include <cstring>
 #include <filesystem>
 #include <fstream>
 #include <iostream>
@@ -7,6 +9,24 @@
 
 Z80 cpu;
 uint8_t memory[65536];
+bool running = true;
+
+zuint8 read_memory(void *context, zuint16 address) { return memory[address]; }
+
+void write_memory(void *context, zuint16 address, zuint8 value) {
+  memory[address] = value;
+}
+
+zuint8 fetch_opcode(void *context, zuint16 address) {
+  if (!address) {
+    running = false;
+    return 0x00; // NOP
+  } else if (address == 5) {
+    // TODO: CP/M BDOS call handling
+    return 0xC9; // RET
+  }
+  return memory[address];
+}
 
 struct Args {
   std::filesystem::path program;
@@ -30,12 +50,27 @@ int main(int argc, char *argv[]) {
 
   std::ifstream program_file(args->program, std::ios::binary);
   if (!program_file) {
-    std::cerr << "Error: Could not open program file: " << args->program << std::endl;
+    std::cerr << "Error: Could not open program file: " << args->program
+              << std::endl;
     return 1;
   }
 
-  for (unsigned addr = 0x0100; addr < sizeof(memory) && !program_file.eof(); addr++) {
+  for (unsigned addr = 0x0100; addr < sizeof(memory) && !program_file.eof();
+       addr++) {
     memory[addr] = program_file.get();
+  }
+
+  memset(&cpu, 0, sizeof(cpu));
+  cpu.pc.uint16_value = 0x0100;
+  cpu.sp.uint16_value = 0;
+
+  cpu.fetch_opcode = fetch_opcode;
+  cpu.fetch = read_memory;
+  cpu.read = read_memory;
+  cpu.write = write_memory;
+
+  while (running) {
+    z80_execute(&cpu, 1);
   }
 
   return 0;
