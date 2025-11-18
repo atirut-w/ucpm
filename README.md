@@ -1,2 +1,2 @@
 # UCPM
-CP/M BDOS compatibility layer. WIP.
+A compatibility layer for running CP/M software on modern systems.
