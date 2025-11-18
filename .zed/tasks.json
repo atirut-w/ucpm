@@ -1,0 +1,18 @@
+[
+  {
+    "label": "Configure",
+    "command": "mkdir -p build && cmake -B build . -DCMAKE_BUILD_TYPE=Debug"
+  },
+  {
+    "label": "Build",
+    "command": "make -C build -j"
+  },
+  {
+    "label": "Clean",
+    "command": "make -C build clean"
+  },
+  {
+    "label": "Clean Rebuild",
+    "command": "make -C build clean && make -C build -j"
+  }
+]
