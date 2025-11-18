@@ -186,7 +186,9 @@ zuint8 fetch_opcode(void *context, zuint16 address) {
 
     switch (func) {
     default:
-      std::cout << std::format("Fatal: unknown BDOS system call {}", func)
+      std::cout << std::format(
+                       "Fatal: unknown BDOS system call {} with argument {}",
+                       func, arg)
                 << std::endl;
       running = false;
       break;
