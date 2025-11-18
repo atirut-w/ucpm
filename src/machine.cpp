@@ -74,26 +74,31 @@ static zuint8 fetch_opcode(void *context, zuint16 address) {
     case F_OPEN: {
       FileControlBlock fcb;
       machine.memout(&fcb, arg, sizeof(fcb));
+      std::string name = std::format("{:.8}", (char *)fcb.f);
+      std::string type = std::format("{:.3}", (char *)fcb.t);
 
-      std::string filename = std::format("{}.{}", fcb.f, fcb.t);
-      if (open_files.find(filename) != open_files.end()) {
+      name.erase(name.find_last_not_of(' ') + 1);
+      type.erase(type.find_last_not_of(' ') + 1);
+
+      std::string path = std::format("{}.{}", name, type);
+      if (open_files.find(path) != open_files.end()) {
         result = (FileAlreadyOpen << 8) | 0xff;
         break;
       }
-      if (filename.find('?') == std::string::npos) {
+      if (path.find('?') != std::string::npos) {
         result = (FilenameContainsWildcard << 8) | 0xff;
         break;
       }
       // TODO: More robust error checking?
 
       std::fstream file;
-      file.open(filename, std::ios::in | std::ios::out | std::ios::binary);
+      file.open(path, std::ios::in | std::ios::out | std::ios::binary);
       if (!file.is_open()) {
         result = (SoftwareError << 8) | 0xff;
         break;
       }
 
-      open_files[filename] = std::move(file);
+      open_files[path] = std::move(file);
       result = 0; // Success
       break;
     }
