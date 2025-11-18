@@ -29,6 +29,22 @@ static zuint8 fetch_opcode(void *context, zuint16 address) {
     uint16_t result = 0;
 
     switch (func) {
+    case C_RAWIO:
+      switch (arg & 0xff) {
+      case 0xff:
+      case 0xfe:
+      case 0xfd:
+      case 0xfc:
+        std::cout << std::format("Fatal: unsupported direct console I/O {}",
+                                 (int)(arg & 0xff))
+                  << std::endl;
+        machine.running = false;
+        break;
+      default:
+        std::cout << (char)(arg & 0xff);
+        break;
+      }
+      break;
     case DRV_SET:
       result = arg == 0 ? 0 : 0x00ff; // Success if drive A
       break;
