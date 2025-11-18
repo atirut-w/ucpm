@@ -49,6 +49,9 @@ static zuint8 fetch_opcode(void *context, zuint16 address) {
 
         char ch;
         if (read(STDIN_FILENO, &ch, 1) == 1) {
+          if (ch == '\n') {
+            ch = '\r';
+          }
           result = ch;
         } else {
           result = 0; // No character read
