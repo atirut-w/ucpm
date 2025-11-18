@@ -1,8 +1,13 @@
 #include <bdos.hpp>
 #include <cstring>
 #include <format>
+#include <fstream>
 #include <iostream>
 #include <machine.hpp>
+#include <string>
+#include <unordered_map>
+
+static std::unordered_map<std::string, std::fstream> open_files;
 
 static zuint8 read_memory(void *ctx, zuint16 address) {
   return static_cast<Machine *>(ctx)->memory[address];
@@ -30,7 +35,28 @@ static zuint8 fetch_opcode(void *context, zuint16 address) {
     case F_OPEN: {
       FileControlBlock fcb;
       machine.memout(&fcb, arg, sizeof(fcb));
-      std::string filename;
+
+      std::string filename = std::format("{}.{}", fcb.f, fcb.t);
+      if (open_files.find(filename) != open_files.end()) {
+        result = (FileAlreadyOpen << 8) | 0xff;
+        break;
+      }
+      if (filename.find('?') == std::string::npos) {
+        result = (FilenameContainsWildcard << 8) | 0xff;
+        break;
+      }
+      // TODO: More robust error checking?
+
+      std::fstream file;
+      file.open(filename, std::ios::in | std::ios::out | std::ios::binary);
+      if (!file.is_open()) {
+        result = (SoftwareError << 8) | 0xff;
+        break;
+      }
+
+      open_files[filename] = std::move(file);
+      result = 0; // Success
+      break;
     }
     case DRV_GET:
       result = 0; // Always drive A

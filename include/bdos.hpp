@@ -1,6 +1,36 @@
 #pragma once
 #include <cstdint>
 
+enum CpmError {
+  // 0 - Software error (e.g. file not found)
+  SoftwareError = 0,
+  // 1 - Select error (cannot access drive)
+  SelectError = 1,
+  // 2 - Disk is read-only
+  DiskReadOnly = 2,
+  // 3 - File is read-only
+  FileReadOnly = 3,
+  // 4 - Invalid drive
+  InvalidDrive = 4,
+  // 5 - File already open
+  FileAlreadyOpen = 5,
+  // 6 - FCB checksum error (MP/M II) - the calling program has tampered with
+  // the FCB.
+  FcbChecksumError = 6,
+  // 7 - Password error
+  PasswordError = 7,
+  // 8 - File already exists
+  FileAlreadyExists = 8,
+  // 9 - Filename contains '?'
+  FilenameContainsWildcard = 9,
+  // 10 - Wheel protection error (ZPM3) / Too many files open (MP/M II)
+  WheelProtectionOrTooManyFilesOpen = 10,
+  // 11 - No room in system lock list (MP/M II)
+  NoRoomInSystemLockList = 11,
+  // 12 - Not logged on to server (CP/Net)
+  NotLoggedOnToServer = 12
+};
+
 enum FuncNum {
   // 0 - System reset / terminate (does not return), CP/M 1,2,3 core BDOS call
   P_TERMCPM = 0,
