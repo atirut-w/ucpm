@@ -8,3 +8,4 @@ add_executable(ucpm
 )
 target_link_libraries(ucpm PRIVATE Z80)
 target_compile_features(ucpm PRIVATE cxx_std_23)
+target_include_directories(ucpm PRIVATE include)
