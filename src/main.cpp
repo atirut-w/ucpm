@@ -1,73 +1,11 @@
-#include <bdos.hpp>
+#include "machine.hpp"
 #include <Z/types/integral.h>
 #include <Z80.h>
-#include <cstdint>
-#include <cstring>
+#include <bdos.hpp>
 #include <filesystem>
-#include <format>
 #include <fstream>
 #include <iostream>
 #include <optional>
-
-Z80 cpu;
-uint8_t memory[65536];
-bool running = true;
-
-zuint8 read_memory(void *context, zuint16 address) { return memory[address]; }
-
-void write_memory(void *context, zuint16 address, zuint8 value) {
-  memory[address] = value;
-}
-
-void memin(uint16_t dest, void *src, uint16_t count) {
-  for (uint16_t i = 0; i < count; i++) {
-    memory[dest + i] = ((uint8_t *)src)[i];
-  }
-}
-
-void memout(void *dest, uint16_t src, uint16_t count) {
-  for (uint16_t i = 0; i < count; i++) {
-    ((uint8_t *)dest)[i] = memory[src + i];
-  }
-}
-
-zuint8 fetch_opcode(void *context, zuint16 address) {
-  if (!address) {
-    running = false;
-    return 0x00; // NOP
-  } else if (address == 5) {
-    uint8_t func = cpu.bc.uint8_array[0];
-    uint16_t arg = cpu.de.uint16_value;
-    uint16_t result = 0;
-
-    switch (func) {
-    case DRV_SET:
-      result = arg == 0 ? 0 : 0x00ff; // Success if drive A
-      break;
-    case F_OPEN: {
-      FileControlBlock fcb;
-      memout(&fcb, arg, sizeof(fcb));
-      std::string filename;
-    }
-    case DRV_GET:
-      result = 0; // Always drive A
-      break;
-    default:
-      std::cout << std::format(
-                       "Fatal: unknown BDOS system call {} with argument {}",
-                       func, arg)
-                << std::endl;
-      running = false;
-      break;
-    }
-
-    cpu.af.uint8_array[1] = result & 0xFF;
-    cpu.bc.uint8_array[0] = (result >> 8) & 0xFF;
-    cpu.hl.uint16_value = result;
-    return 0xC9; // RET
-  }
-  return memory[address];
-}
 
 struct Args {
   std::filesystem::path program;
@@ -96,22 +34,15 @@ int main(int argc, char *argv[]) {
     return 1;
   }
 
-  for (unsigned addr = 0x0100; addr < sizeof(memory) && !program_file.eof();
+  Machine machine;
+
+  for (unsigned addr = 0x0100; addr < sizeof(machine.memory) && !program_file.eof();
        addr++) {
-    memory[addr] = program_file.get();
+    machine.memory[addr] = program_file.get();
   }
 
-  memset(&cpu, 0, sizeof(cpu));
-  cpu.pc.uint16_value = 0x0100;
-  cpu.sp.uint16_value = 0;
-
-  cpu.fetch_opcode = fetch_opcode;
-  cpu.fetch = read_memory;
-  cpu.read = read_memory;
-  cpu.write = write_memory;
-
-  while (running) {
-    z80_execute(&cpu, 1);
+  while (machine.running) {
+    z80_execute(&machine.cpu, 1);
   }
 
   return 0;
