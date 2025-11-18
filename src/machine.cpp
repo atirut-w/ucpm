@@ -11,6 +11,16 @@
 
 static std::unordered_map<std::string, std::fstream> open_files;
 
+static std::string get_filename_from_fcb(const FileControlBlock &fcb) {
+  std::string name = std::format("{:.8}", (char *)fcb.f);
+  std::string type = std::format("{:.3}", (char *)fcb.t);
+
+  name.erase(name.find_last_not_of(' ') + 1);
+  type.erase(type.find_last_not_of(' ') + 1);
+
+  return std::format("{}.{}", name, type);
+}
+
 static bool console_has_char() {
   fd_set set;
   struct timeval tv = {0, 0};
@@ -77,13 +87,8 @@ static zuint8 fetch_opcode(void *context, zuint16 address) {
     case F_OPEN: {
       FileControlBlock fcb;
       machine.memout(&fcb, arg, sizeof(fcb));
-      std::string name = std::format("{:.8}", (char *)fcb.f);
-      std::string type = std::format("{:.3}", (char *)fcb.t);
 
-      name.erase(name.find_last_not_of(' ') + 1);
-      type.erase(type.find_last_not_of(' ') + 1);
-
-      std::string path = std::format("{}.{}", name, type);
+      std::string path = get_filename_from_fcb(fcb);
       if (open_files.find(path) != open_files.end()) {
         result = (FileAlreadyOpen << 8) | 0xff;
         break;
@@ -112,12 +117,7 @@ static zuint8 fetch_opcode(void *context, zuint16 address) {
       FileControlBlock fcb;
       machine.memout(&fcb, arg, sizeof(fcb));
 
-      std::string name = std::format("{:.8}", (char *)fcb.f);
-      std::string type = std::format("{:.3}", (char *)fcb.t);
-      name.erase(name.find_last_not_of(' ') + 1);
-      type.erase(type.find_last_not_of(' ') + 1);
-      std::string path = std::format("{}.{}", name, type);
-
+      std::string path = get_filename_from_fcb(fcb);
       if (open_files.find(path) == open_files.end()) {
         result = 9; // Invalid FCB
       }
