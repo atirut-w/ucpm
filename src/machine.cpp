@@ -95,7 +95,7 @@ static zuint8 fetch_opcode(void *context, zuint16 address) {
       // CP/M 2.2/3 buffered console input:
       // buffer[0] = max size, buffer[1] = current length, buffer[2..] = data
       char buffer[256];
-      uint8_t index = 0;
+      uint16_t index = 0;
 
       // Simple line editor: echo, handle BS/DEL, stop on CR/LF
       while (index < sizeof(buffer)) {
