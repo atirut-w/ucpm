@@ -409,6 +409,64 @@ Machine::Machine() {
   cpu.write = write_memory;
 }
 
+void Machine::init_cpm_zero_page() {
+  // Clear zero page 0000–00FF
+  std::memset(&memory[0x0000], 0, 0x0100);
+
+  // 0000–0002: Exit to CCP/BIOS. We treat PC==0 as “exit”, so
+  // this code never really runs, but make it a harmless JMP 0000h.
+  memory[0x0000] = 0xC3; // JMP 0000h
+  memory[0x0001] = 0x00;
+  memory[0x0002] = 0x00;
+
+  // 0003: IOBYTE – default to 0 (typical CP/M)
+  memory[0x0003] = 0x00;
+
+  // 0004: Current drive/user (low nibble = drive, high nibble = user)
+  // 0 = drive A:, user 0
+  memory[0x0004] = 0x00;
+
+  // 0005–0007: BDOS entry. Real CP/M uses "JMP BDOS". We trap on PC==5
+  // in fetch_opcode, so the contents are irrelevant, but we keep it sane:
+  memory[0x0005] = 0xC3; // JMP 0005h (self‑jump; never actually executed)
+  memory[0x0006] = 0x05;
+  memory[0x0007] = 0x00;
+
+  // 0008–003F: 8080 restart/interrupt vectors and reserved – left as 0
+
+  // 0040–004F: Reserved for BIOS – left as 0
+
+  // 0050: Drive from which the program was loaded (CP/M 3; 0 = A:)
+  memory[0x0050] = 0x00;
+
+  // 0051–0052: Password address for FCB1 (CP/M 3) – 0 = none
+  memory[0x0051] = 0x00;
+  memory[0x0052] = 0x00;
+
+  // 0053: Password length for FCB1
+  memory[0x0053] = 0x00;
+
+  // 0054–0055: Password address for FCB2
+  memory[0x0054] = 0x00;
+  memory[0x0055] = 0x00;
+
+  // 0056: Password length for FCB2
+  memory[0x0056] = 0x00;
+
+  // 0057–005B: Reserved – left as 0
+
+  // 005C–006B: Default FCB 1 – left all bytes zero
+  // 006C–007F: Default FCB 2 – left all bytes zero
+
+  // 0080: Command tail length (0 = no arguments)
+  memory[0x0080] = 0x00;
+
+  // 0081–00FF: Command tail – left as 0
+
+  // Default BDOS DMA address: standard CP/M is 0080h
+  dma_address = 0x0080;
+}
+
 void Machine::memin(uint16_t dest, void *src, uint16_t count) {
   for (uint16_t i = 0; i < count; i++) {
     memory[dest + i] = ((uint8_t *)src)[i];

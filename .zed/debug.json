@@ -4,8 +4,8 @@
     "adapter": "CodeLLDB",
     "request": "launch",
     "program": "./build/ucpm",
-    "args": ["ZORK1.COM"],
-    "cwd": "${ZED_WORKTREE_ROOT}/zork",
+    "args": ["WS.COM"],
+    "cwd": "${ZED_WORKTREE_ROOT}/WordStar/D1",
     "build": "Build"
   }
 ]

@@ -37,6 +37,7 @@ int main(int argc, char *argv[]) {
   }
 
   Machine machine;
+  machine.init_cpm_zero_page();
 
   for (unsigned addr = 0x0100; addr < sizeof(machine.memory) && !program_file.eof();
        addr++) {

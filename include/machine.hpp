@@ -10,6 +10,7 @@ struct Machine {
 
   Machine();
 
+  void init_cpm_zero_page();
   void memin(uint16_t dest, void *src, uint16_t count);
   void memout(void *dest, uint16_t src, uint16_t count);
 };
